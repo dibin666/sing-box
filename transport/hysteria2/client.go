@@ -304,3 +304,8 @@ func (c *clientConn) LocalAddr() net.Addr {
 func (c *clientConn) RemoteAddr() net.Addr {
 	return M.Socksaddr{}
 }
+
+func (c *clientConn) Close() error {
+	c.Stream.CancelRead(0)
+	return c.Stream.Close()
+}

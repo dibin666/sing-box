@@ -241,6 +241,8 @@ func (s *serverSession) handleStream0(frameType http3.FrameType, connection quic
 	}
 	go func() {
 		hErr := s.handleStream(stream)
+		stream.CancelRead(0)
+		stream.Close()
 		if hErr != nil {
 			stream.CancelRead(0)
 			stream.Close()
@@ -255,14 +257,11 @@ func (s *serverSession) handleStream(stream quic.Stream) error {
 	if err != nil {
 		return E.New("read TCP request")
 	}
-	var conn net.Conn = &serverConn{
-		Stream: stream,
-	}
 	ctx := s.ctx
 	if s.authUser.Name != "" {
 		ctx = auth.ContextWithUser(s.ctx, s.authUser.Name)
 	}
-	_ = s.handler.NewConnection(ctx, conn, M.Metadata{
+	_ = s.handler.NewConnection(ctx, &serverConn{Stream: stream}, M.Metadata{
 		Source:      s.source,
 		Destination: M.ParseSocksaddr(destinationString),
 	})
